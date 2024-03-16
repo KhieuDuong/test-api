@@ -1,0 +1,216 @@
+<!-- Thêm một nút để kích hoạt việc hiển thị form tạo bài đăng mới -->
+<button id="showCreatePostFormButton" class="btn btn-success">Create Post</button>
+
+<!-- Thêm form để tạo bài đăng mới (ban đầu được ẩn) -->
+<form id="createPostForm" style="display: none;">
+    <label for="title">Title:</label><br>
+    <input type="text" id="title" name="title"><br>
+    <label for="imgUrl">Image URL:</label><br>
+    <input type="text" id="imgUrl" name="imgUrl"><br>
+    <label for="content">Content:</label><br>
+    <textarea id="content" name="content"></textarea><br><br>
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+
+<!-- Thêm một phần tử để hiển thị kết quả từ API -->
+<table id="postTable" style="border-collapse: collapse;">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Content</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+
+    var showCreatePostFormButton = document.getElementById("showCreatePostFormButton");
+    var createPostForm = document.getElementById("createPostForm");
+    var postTableBody = document.querySelector("#postTable tbody");
+
+    // Gắn sự kiện click cho nút showCreatePostFormButton
+    showCreatePostFormButton.addEventListener("click", function() {
+        // Hiển thị form tạo bài đăng mới
+        createPostForm.style.display = "block";
+    });
+
+    // Gắn sự kiện submit cho form createPostForm
+    createPostForm.addEventListener("submit", function(event) {
+        event.preventDefault(); // Ngăn chặn việc gửi yêu cầu mặc định của form
+
+        // Lấy dữ liệu từ form
+        var postData = {
+            title: document.getElementById("title").value,
+            imgUrl: document.getElementById("imgUrl").value,
+            content: document.getElementById("content").value
+        };
+
+        // Gọi API để tạo bài đăng mới
+        fetch('http://localhost:3000/api/blog/create', {
+            method: 'POST',
+            headers: {
+                'Accept': '*/*',
+                'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7,vi;q=0.6',
+                'Connection': 'keep-alive',
+                'Content-Type': 'application/json',
+                'Origin': 'http://localhost:3000',
+                'Referer': 'http://localhost:3000/',
+                'Sec-Fetch-Dest': 'empty',
+                'Sec-Fetch-Mode': 'cors',
+                'Sec-Fetch-Site': 'same-origin',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+                'sec-ch-ua': '"Chromium";v="122", "Not(A:Brand";v="24", "Google Chrome";v="122"',
+                'sec-ch-ua-mobile': '?0',
+                'sec-ch-ua-platform': '"Windows"'
+            },
+            body: JSON.stringify(postData)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Bài đăng đã được tạo:', data);
+            // Sau khi tạo bài đăng thành công, ẩn form và tải lại danh sách bài đăng
+            createPostForm.reset(); // Đặt lại các trường trong form
+            createPostForm.style.display = "none"; // Ẩn form
+            loadPosts(); // Tải lại danh sách bài đăng
+        })
+        .catch(error => {
+            console.error('Lỗi khi gọi API để tạo bài đăng mới:', error);
+        });
+    });
+
+    // Hàm để tải danh sách bài đăng
+    function loadPosts() {
+        fetch('http://127.0.0.1:3000/api/blog/all', {
+            method: 'GET',
+            headers: {
+                'Accept': '*/*',
+                'Accept-Language': 'en-US,en;q=0.9,vi;q=0.8',
+                'Connection': 'keep-alive',
+                'If-None-Match': 'W/"1db-M02Bg9QMa6jcrG3qMjJPb/d68n0"',
+                'Referer': 'http://localhost:3000/',
+                'Sec-Fetch-Dest': 'empty',
+                'Sec-Fetch-Mode': 'cors',
+                'Sec-Fetch-Site': 'same-origin',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+                'sec-ch-ua': '"Chromium";v="122", "Not(A:Brand";v="24", "Google Chrome";v="122"',
+                'sec-ch-ua-mobile': '?0',
+                'sec-ch-ua-platform': '"Windows"',
+                'Cache-Control': 'no-cache'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Xóa nội dung cũ trong bảng trước khi thêm dữ liệu mới
+            postTableBody.innerHTML = "";
+
+            // Lặp qua mỗi bài đăng và tạo hàng mới trong bảng
+            data.forEach(post => {
+                var row = postTableBody.insertRow();
+
+                // Thêm dữ liệu từ mỗi bài đăng vào hàng mới
+                row.insertCell().textContent = post.title;
+                row.insertCell().innerHTML = post.content;
+            });
+        })
+        .catch(error => {
+            console.error('Lỗi khi gọi API:', error);
+        });
+    }
+
+    // Ban đầu, tải danh sách bài đăng khi trang được tải
+    loadPosts();
+});
+</script>
+
+
+<!-- Thêm một nút để kích hoạt việc hiển thị form chỉnh sửa bài đăng -->
+<button id="showEditPostFormButton" class="btn btn-warning">Edit Post</button>
+
+<!-- Thêm form để chỉnh sửa bài đăng (ban đầu được ẩn) -->
+<form id="editPostForm" style="display: none;">
+    <label for="editTitle">Title:</label><br>
+    <input type="text" id="editTitle" name="editTitle"><br>
+    <label for="editImgUrl">Image URL:</label><br>
+    <input type="text" id="editImgUrl" name="editImgUrl"><br>
+    <label for="editContent">Content:</label><br>
+    <textarea id="editContent" name="editContent"></textarea><br><br>
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+
+    var showEditPostFormButton = document.getElementById("showEditPostFormButton");
+    var editPostForm = document.getElementById("editPostForm");
+    var postTableBody = document.querySelector("#postTable tbody");
+
+    // Gắn sự kiện click cho nút showEditPostFormButton
+    showEditPostFormButton.addEventListener("click", function() {
+        // Hiển thị form chỉnh sửa bài đăng
+        editPostForm.style.display = "block";
+    });
+
+    // Gắn sự kiện submit cho form editPostForm
+    editPostForm.addEventListener("submit", function(event) {
+        event.preventDefault(); // Ngăn chặn việc gửi yêu cầu mặc định của form
+
+        // Lấy dữ liệu từ form chỉnh sửa
+        var postData = {
+            title: document.getElementById("editTitle").value,
+            imgUrl: document.getElementById("editImgUrl").value,
+            content: document.getElementById("editContent").value
+        };
+
+        // Gọi API để cập nhật bài đăng
+        fetch('http://localhost:3000/api/blog/update/65e42dae4f83fafa32cfa74b', {
+            method: 'PUT',
+            headers: {
+                'Accept': '*/*',
+                'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+                'Connection': 'keep-alive',
+                'Content-Type': 'application/json',
+                'Origin': 'http://localhost:3000',
+                'Referer': 'http://localhost:3000/blog/65e42dae4f83fafa32cfa74b',
+                'Sec-Fetch-Dest': 'empty',
+                'Sec-Fetch-Mode': 'cors',
+                'Sec-Fetch-Site': 'same-origin',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+                'sec-ch-ua': '"Chromium";v="122", "Not(A:Brand";v="24", "Google Chrome";v="122"',
+                'sec-ch-ua-mobile': '?0',
+                'sec-ch-ua-platform': '"Windows"'
+            },
+            body: JSON.stringify(postData)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Bài đăng đã được cập nhật:', data);
+            // Sau khi cập nhật bài đăng thành công, ẩn form chỉnh sửa
+            editPostForm.reset(); // Đặt lại các trường trong form
+            editPostForm.style.display = "none"; // Ẩn form
+        })
+        .catch(error => {
+            console.error('Lỗi khi gọi API để cập nhật bài đăng:', error);
+        });
+    });
+});
+</script>
+
+
+

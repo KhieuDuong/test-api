@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog Management</title>
+    <style>
+
+.edit-comment-popup {
+    width: 400px;
+    height: 200px;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.edit-post-popup {
+    width: 700px;
+    height: 450px;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.edit-comment-popup h2 {
+    margin-top: 0;
+}
+
+.edit-comment-popup textarea {
+    width: 100%;
+    height: 100px;
+    margin-bottom: 10px;
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+
+.edit-comment-popup button {
+    padding: 8px 15px;
+    margin-right: 10px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.edit-comment-popup button:hover {
+    background-color: #f0f0f0;
+}
+
+/* CSS cho tất cả các button */
+button {
+    padding: 8px 15px;
+    margin-right: 10px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+/* Hover effect cho tất cả các button */
+button:hover {
+    background-color: #f0f0f0;
+}
+
+
+#postTable {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#postTable th,
+#postTable td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: left;
+}
+
+#postTable th {
+    background-color: #f2f2f2;
+}
+
+#postTable tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+#postTable tbody tr:hover {
+    background-color: #f0f0f0;
+}
+
+#postTable {
+    width: 700px; /* Chiều rộng của bảng là 100% của phần tử cha */
+    height: 300px; /* Chiều cao của bảng là 300px (hoặc bất kỳ giá trị nào khác) */
+    border-collapse: collapse;
+}
+
+
+    </style>
+</head>
+<body>
+    <!-- HTML content here -->
+
+
+<!-- Thêm một phần tử để hiển thị kết quả từ API -->
+<table id="postTable" style="border-collapse: collapse;">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Content</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+
+
+<!-- Thêm một nút để kích hoạt việc hiển thị form tạo bài đăng mới -->
+
+<!-- Thêm form để tạo bài đăng mới (ban đầu được ẩn) -->
+<form id="createPostForm"  class = "edit-post-popup" style="display: none;">
+    <label for="title">Title:</label><br>
+    <input type="text" id="title" name="title"><br>
+    <label for="content">Content:</label><br>
+    <textarea id="editor1"></textarea>
+    <!-- <textarea id="content" name="content"></textarea><br><br> -->
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+
+
+<!-- Phần tử để hiển thị thông tin chi tiết và comment -->
+<div id="postDetails" style="display: none;">
+    <button id="backToHomeButton" class="btn btn-primary">Về trang chủ</button>
+    <h2>Chi tiết bài đăng</h2>
+    <div id="postDetailContent"></div>
+    <h3>Comment</h3>
+    <table id="commentTable">
+        <thead>
+            <tr>
+                <th>Account</th>
+                <th>Comment</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="commentList"></tbody>
+    </table>
+</div>
+
+<!-- Thêm form để tạo bài đăng mới (ban đầu được ẩn) -->
+<form id="createPostFormAdd"  class = "add-post">
+    <label for="title">Title 1:</label><br>
+    <input type="text" id="title" name="title"><br>
+    <label for="content">Content:</label><br>
+    <textarea id="editor2"></textarea>
+    <!-- <textarea id="content" name="content"></textarea><br><br> -->
+    <button type="submit"  class="btn btn-primary">Submit</button>
+</form>
+
+
+<script src="https://cdn.ckeditor.com/4.22.1/standard/ckeditor.js"></script>
+<script>
+    // Khởi tạo CKEditor cho textarea của form 1
+    CKEDITOR.replace('editor1');
+
+// Khởi tạo CKEditor cho textarea của form 2
+    CKEDITOR.replace('editor2');
+
+</script>
+
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function() {
+    // Khai báo biến để lấy ra nút về trang chủ
+    var backToHomeButton = document.getElementById("backToHomeButton");
+
+
+    // Gắn sự kiện click cho nút
+    backToHomeButton.addEventListener("click", function() {
+        var postTable = document.getElementById("postTable");
+        postTable.style.display = "block";
+        var postDetails = document.getElementById("postDetails");
+        postDetails.style.display = "none";
+    });
+});
+
+
+
+document.addEventListener("DOMContentLoaded", function() {
+    // Lấy tham chiếu đến form và button submit
+    var createPostForm = document.getElementById("createPostFormAdd");
+    var submitButton = createPostForm.querySelector("button[type='submit']");
+
+    // Gắn sự kiện submit cho form
+    createPostForm.addEventListener("submit", function(event) {
+        // Ngăn chặn hành động mặc định của form (chặn việc tải lại trang)
+        event.preventDefault();
+
+        // Lấy dữ liệu từ các trường input và textarea
+        var title = createPostForm.querySelector("#title").value;
+        var content = CKEDITOR.instances.editor2.getData(); // Sử dụng CKEditor để lấy nội dung
+
+        // Gửi yêu cầu POST để tạo bài đăng mới
+        fetch('http://localhost:3000/api/blog/create', {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ title: title, content: content })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Bài đăng đã được tạo:', data);
+        createPostForm.style.display = "none";
+        loadPosts();
+    })
+    .catch(error => {
+        console.error('Lỗi khi tạo bài đăng mới:', error);
+    });
+
+    });
+
+        // Hàm để tải danh sách bài đăng
+        function loadPosts() {
+            window.location.href = "http://127.0.0.1:5500/qa.html"; // Thay đổi URL về trang chủ của bạn
+
+
+    }
+
+
+});
+
+
+
+    // Phần JavaScript để gắn sự kiện và xử lý tương tác người dùng
+    // Đoạn mã đã được mở rộng trong phần trước
+    
+
+function showPostDetails(postId) {
+    fetch('http://127.0.0.1:3000/api/blog/' + postId, {
+        method: 'GET',
+        headers: {
+            // Các headers
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Hiển thị thông tin chi tiết của bài đăng
+        var postDetailContent = document.getElementById("postDetailContent");
+        postDetailContent.innerHTML = "<h3>" + data.title + "</h3>" + data.content;
+
+        // Hiển thị danh sách comment của bài đăng trong bảng
+        var commentTable = document.getElementById("commentTable");
+        var commentList = document.getElementById("commentList");
+        commentList.innerHTML = ""; // Xóa nội dung cũ
+
+        data.comments.forEach(comment => {
+            var row = commentList.insertRow();
+            var accountCell = row.insertCell(0);
+            var commentCell = row.insertCell(1);
+            var actionCell = row.insertCell(2);
+
+            accountCell.textContent = comment.account;
+            commentCell.textContent = comment.comment;
+
+            // Tạo nút "Edit comment"
+            var editButton = document.createElement("button");
+            editButton.textContent = "Edit";
+            editButton.classList.add("edit-comment-button");
+            editButton.setAttribute("data-comment-id", comment._id);
+            actionCell.appendChild(editButton);
+
+            // Gắn sự kiện click cho nút "Edit comment"
+            editButton.addEventListener("click", function() {
+                var commentId = editButton.getAttribute("data-comment-id");
+                editComment(commentId, postId);
+            });
+        });
+
+        // Hiển thị phần tử chứa thông tin chi tiết và comment
+        var postDetails = document.getElementById("postDetails");
+        postDetails.style.display = "block";
+
+        // Hiển thị form tạo comment mới
+        var createCommentForm = document.getElementById("createCommentForm");
+        createCommentForm.style.display = "block";
+    })
+    .catch(error => console.error('Lỗi khi tải thông tin chi tiết của bài đăng:', error));
+}
+
+function editComment(commentId, postId) {
+    // Kiểm tra xem form chỉnh sửa đã tồn tại chưa
+    var editCommentForm = document.getElementById("editCommentForm");
+
+    // Nếu form chưa tồn tại, thì tạo mới và gắn sự kiện
+    if (!editCommentForm) {
+        // Tạo form chỉnh sửa comment
+        editCommentForm = document.createElement("div");
+        editCommentForm.id = "editCommentForm";
+        editCommentForm.className = "edit-comment-popup";
+        editCommentForm.style.display = "none";
+
+        var editCommentContent = `
+            <h2>Edit Comment</h2>
+            <textarea id="editedComment"></textarea><br>
+            <button id="editCommentCloseButton">Close</button>
+            <button id="editCommentSubmitButton">Submit</button>
+        `;
+        editCommentForm.innerHTML = editCommentContent;
+
+        // Thêm form vào body để hiển thị
+        document.body.appendChild(editCommentForm);
+
+        // Gắn sự kiện cho nút đóng form chỉnh sửa
+        var closeButton = document.getElementById("editCommentCloseButton");
+        closeButton.addEventListener("click", function() {
+            editCommentForm.style.display = "none"; // Đóng form
+        });
+    }
+
+    // Lấy và hiển thị nội dung comment để chỉnh sửa
+    var commentText = ''; // Đảm bảo commentText có giá trị hợp lệ
+    var commentsList = document.getElementById("commentList");
+    commentsList.childNodes.forEach(node => {
+        if (node.getAttribute("data-comment-id") === commentId) {
+            commentText = node.textContent.split(": ")[1]; // Lấy nội dung comment
+        }
+    });
+    document.getElementById("editedComment").value = commentText;
+
+    // Gắn sự kiện cho nút "Submit"
+    var submitButton = document.getElementById("editCommentSubmitButton");
+    submitButton.addEventListener("click", function() {
+        var editedComment = document.getElementById("editedComment").value;
+        var postData = {
+            commentId: commentId,
+            comment: editedComment,
+            account: "test" // Thay đổi thành tên tài khoản của người đăng nhập (nếu có)
+        };
+
+        // Gửi yêu cầu PUT để cập nhật comment
+        fetch('http://localhost:3000/api/comment/' + postId, {
+            method: 'PUT',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(postData)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Comment đã được cập nhật:', data);
+            // Thực hiện các hành động cần thiết sau khi cập nhật comment thành công
+            // Ví dụ: cập nhật giao diện, hiển thị thông báo, vv.
+            editCommentForm.style.display = "none"; // Đóng form sau khi cập nhật thành công
+        })
+        .catch(error => {
+            console.error('Lỗi khi cập nhật comment:', error);
+        });
+
+
+    });
+
+    // Hiển thị form chỉnh sửa ở giữa màn hình
+    editCommentForm.style.display = "block";
+}
+
+</script>
+    
+
+<script>
+
+    
+
+document.addEventListener("DOMContentLoaded", function() {
+
+    var submitButton = document.querySelector("#createPostForm button[type='submit']");
+
+    // Thiết lập thuộc tính data-action cho button
+    submitButton.setAttribute("data-action", "add");
+
+    var createPostForm = document.getElementById("createPostForm");
+    var postTableBody = document.querySelector("#postTable tbody");
+
+
+    // Gắn sự kiện submit cho form createPostForm
+    createPostForm.addEventListener("submit", function(event) {
+        event.preventDefault();
+
+        var postData = {
+            title: document.getElementById("title").value,
+            content: CKEDITOR.instances.editor1.getData()
+        };
+
+        var action = createPostForm.getAttribute("data-action");
+
+        if (action === "create") {
+            // Gửi yêu cầu POST để tạo bài đăng mới
+            fetch('http://localhost:3000/api/blog/create', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(postData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Bài đăng đã được tạo:', data);
+                createPostForm.style.display = "none";
+                loadPosts();
+            })
+            .catch(error => {
+                console.error('Lỗi khi tạo bài đăng mới:', error);
+            });
+
+        } else if (action === "edit") {
+            var postId = createPostForm.getAttribute("data-post-id");
+            // Gửi yêu cầu PUT để cập nhật bài đăng
+            fetch('http://127.0.0.1:3000/api/blog/update/' + postId, {
+                method: 'PUT',
+                headers: {
+                    'Accept': '*/*',
+      'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7,vi;q=0.6',
+      'Content-Type': 'application/json',
+      'Cookie': '_ga=GA1.1.1567824617.1706054484; __client_uat=0; __clerk_db_jwt=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJkZXYiOiJkdmJfMmJOWGFFWDgyQVZES2F4NVZqcDhKUldZc1J3In0.Lkhyw9EDQZqGQXBPF8pIJrza3cDEZpNEOBj0L7UAXFjiOrFm5sj4n5ghHi9cdC0GMda6mrACHSAQcd1GUIy3gxnqLZx8eKvvt1AlCVPRppQWl-vFJS6fuQ0X2bQCbfrZqnAyoz4PPqH-g9cKQtSd1FxTGI6bb_uUF5jI82GGOxN_0otvrm6JXShrOocZYI0YJrK8kno-UWWXR2YSQ8kFROOhkZckfFpf34iYShNtKl9SYg4vD6V6vJZodfCV8wNj_BB30gSuMkPE95j1JkVQulspvC-Wzi1m1I8z8aICQE3Ga-W48WPJRhrhNkw0Jf918uSMDZQbeCo1ig94_cLjVg; _ga_EZHDT2S2LF=GS1.1.1706076640.3.0.1706076640.60.0.0; connect.sid=s%3APv20ZPPBORskbGx7wT0o16FiukjYiIGd.sWoyBLYZuJ5OuMMuVPMGddBMmDrSlj6fLomAUVlYT50',
+      'Origin': 'http://127.0.0.1:3000',
+      'Referer': 'http://127.0.0.1:3000/blog/65e42dae4f83fafa32cfa74b',
+      'Sec-Fetch-Dest': 'empty',
+      'Sec-Fetch-Mode': 'cors',
+      'Sec-Fetch-Site': 'same-origin',
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+      'sec-ch-ua': '"Chromium";v="122", "Not(A:Brand";v="24", "Google Chrome";v="122"',
+      'sec-ch-ua-mobile': '?0',
+      'sec-ch-ua-platform': '"Windows"'
+                },
+                body: JSON.stringify(postData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Bài đăng đã được cập nhật:', data);
+                createPostForm.style.display = "none";
+                loadPosts();
+            })
+            .catch(error => {
+                console.error('Lỗi khi cập nhật bài đăng:', error);
+            });
+        }
+    });
+
+
+
+    // Hàm để tải dữ liệu của bài đăng để chỉnh sửa
+    function loadPostDataForEditing(postId) {
+        var rows = postTableBody.querySelectorAll("tr");
+        rows.forEach(row => {
+            var id = row.querySelector(".edit-button").getAttribute("data-id");
+            if (id === postId) {
+                var title = row.cells[0].textContent;
+                var content = row.cells[1].textContent;
+                document.getElementById("title").value = title;
+                // document.getElementById("editor").value = content;
+                CKEDITOR.instances.editor1.setData(content); // Đặt nội dung vào CKEditor
+
+                return;
+            }
+        });
+    }
+
+    // Hàm để tải danh sách bài đăng
+    function loadPosts() {
+        fetch('http://127.0.0.1:3000/api/blog/all', {
+            method: 'GET',
+            headers: {
+                'Accept': '*/*',
+                'Accept-Language': 'en-US,en;q=0.9,vi;q=0.8',
+                'Connection': 'keep-alive',
+                'If-None-Match': 'W/"1db-M02Bg9QMa6jcrG3qMjJPb/d68n0"',
+                'Referer': 'http://localhost:3000/',
+                'Sec-Fetch-Dest': 'empty',
+                'Sec-Fetch-Mode': 'cors',
+                'Sec-Fetch-Site': 'same-origin',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+                'sec-ch-ua': '"Chromium";v="122", "Not(A:Brand";v="24", "Google Chrome";v="122"',
+                'sec-ch-ua-mobile': '?0',
+                'sec-ch-ua-platform': '"Windows"',
+                'Cache-Control': 'no-cache'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            postTableBody.innerHTML = "";
+            data.forEach(post => {
+                var row = postTableBody.insertRow();
+                row.insertCell().textContent = post.title;
+                
+                // Tạo một ô cell mới cho nội dung của bài đăng
+                var contentCell = row.insertCell();
+                var editor = document.createElement("div"); // Tạo một div để chứa CKEditor
+                editor.innerHTML = post.content; // Gán nội dung của bài đăng vào div
+                contentCell.appendChild(editor); // Thêm div vào ô cell
+
+                var actionCell = row.insertCell();
+
+                // Tạo nút "Edit" và "Xem chi tiết"
+                var editButton = document.createElement("button");
+                editButton.textContent = "Edit";
+                editButton.setAttribute("data-id", post._id);
+                editButton.classList.add("edit-button");
+                actionCell.appendChild(editButton);
+
+                var viewDetailButton = document.createElement("button");
+                viewDetailButton.textContent = "Xem chi tiết";
+                viewDetailButton.setAttribute("data-id", post._id);
+                viewDetailButton.classList.add("view-detail-button");
+                actionCell.appendChild(viewDetailButton);
+            });
+        })
+        .catch(error => {
+            console.error('Lỗi khi tải danh sách bài đăng:', error);
+        });
+    }
+
+
+    // Gắn sự kiện click cho nút "Xem chi tiết"
+    postTableBody.addEventListener("click", function(event) {
+        if (event.target.classList.contains("edit-button")) {
+            var postId = event.target.getAttribute("data-id");
+            createPostForm.style.display = "block";
+            createPostForm.reset();
+            createPostForm.setAttribute("data-action", "edit");
+            createPostForm.setAttribute("data-post-id", postId);
+            loadPostDataForEditing(postId);
+        } else if (event.target.classList.contains("view-detail-button")) {
+            var postId = event.target.getAttribute("data-id");
+            showPostDetails(postId);
+
+            // Ẩn bảng postTable
+            postTable.style.display = "none";
+            createPostForm.style.display = "none";
+        }
+});
+
+
+    // Ban đầu, tải danh sách bài đăng khi trang được tải
+    loadPosts();
+});
+</script>
+
+</body>
+</html>
