@@ -48,15 +48,15 @@ document.addEventListener("DOMContentLoaded", function() {
         };
 
         // Gọi API để tạo bài đăng mới
-        fetch('http://localhost:3000/api/blog/create', {
+        fetch('http://localhost3000/api/blog/create', {
             method: 'POST',
             headers: {
                 'Accept': '*/*',
                 'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7,vi;q=0.6',
                 'Connection': 'keep-alive',
                 'Content-Type': 'application/json',
-                'Origin': 'http://localhost:3000',
-                'Referer': 'http://localhost:3000/',
+                'Origin': 'http://localhost3000',
+                'Referer': 'http://localhost3000/',
                 'Sec-Fetch-Dest': 'empty',
                 'Sec-Fetch-Mode': 'cors',
                 'Sec-Fetch-Site': 'same-origin',
@@ -87,14 +87,14 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // Hàm để tải danh sách bài đăng
     function loadPosts() {
-        fetch('http://127.0.0.1:3000/api/blog/all', {
+        fetch('http://192.168.0.1103000/api/blog/all', {
             method: 'GET',
             headers: {
                 'Accept': '*/*',
                 'Accept-Language': 'en-US,en;q=0.9,vi;q=0.8',
                 'Connection': 'keep-alive',
                 'If-None-Match': 'W/"1db-M02Bg9QMa6jcrG3qMjJPb/d68n0"',
-                'Referer': 'http://localhost:3000/',
+                'Referer': 'http://localhost3000/',
                 'Sec-Fetch-Dest': 'empty',
                 'Sec-Fetch-Mode': 'cors',
                 'Sec-Fetch-Site': 'same-origin',
@@ -174,15 +174,15 @@ document.addEventListener("DOMContentLoaded", function() {
         };
 
         // Gọi API để cập nhật bài đăng
-        fetch('http://localhost:3000/api/blog/update/65e42dae4f83fafa32cfa74b', {
+        fetch('http://localhost3000/api/blog/update/65e42dae4f83fafa32cfa74b', {
             method: 'PUT',
             headers: {
                 'Accept': '*/*',
                 'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
                 'Connection': 'keep-alive',
                 'Content-Type': 'application/json',
-                'Origin': 'http://localhost:3000',
-                'Referer': 'http://localhost:3000/blog/65e42dae4f83fafa32cfa74b',
+                'Origin': 'http://localhost3000',
+                'Referer': 'http://localhost3000/blog/65e42dae4f83fafa32cfa74b',
                 'Sec-Fetch-Dest': 'empty',
                 'Sec-Fetch-Mode': 'cors',
                 'Sec-Fetch-Site': 'same-origin',

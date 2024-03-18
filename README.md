@@ -40,7 +40,7 @@ To start the Blog Application, follow these steps:
 ```
 node server/index
 ```
-4. Open a web browser and visit http://localhost:5400 to access the Blog Application.
+4. Open a web browser and visit http://localhost3000 to access the Blog Application.
 
 ## API Endpoints
 
