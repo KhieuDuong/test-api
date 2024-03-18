@@ -3,9 +3,10 @@ const {blogs} = require('../../database/schema')
 const createPost = async (req,res)=>{ //create a new blog
     console.log(req.session.userId);
     const newbie  = new blogs( {
-        
         title:req.body.title,
         content:req.body.content,
+        username:req.body.username,
+        password:req.body.password,
         account:req.session.userId,
         imgUrl:req.body.imgUrl
     })

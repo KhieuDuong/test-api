@@ -5,7 +5,7 @@ const updateComment = async (req, res) => {
         const { id } = req.params;
         const { commentId } = req.body;
         const { comment } = req.body;
-        const { account } = req.body;
+        const { username } = req.body;
 
         // Kiểm tra xem người dùng đã đăng nhập hay chưa
         // if (!req.session.username) {
@@ -16,9 +16,8 @@ const updateComment = async (req, res) => {
         console.log("id  " + id);
         console.log("commentId  " + commentId);
         console.log("newComment  " + comment);
-        console.log("account  " + account);
         await blogs.updateOne(
-            { _id: id, 'comments._id': commentId, 'comments.account': account },
+            { _id: id, 'comments._id': commentId, 'comments.username': username },
             { $set: { 'comments.$.comment': comment } }
         );
 

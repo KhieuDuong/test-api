@@ -54,7 +54,10 @@ const blogsSchema = new mongoose.Schema({
     createdAt:{
         type: Date,
         default: Date.now()
-    }   
+    },
+    username: String,
+    password: String
+
 })
 
 const user = new mongoose.model("user",userSchema);
